@@ -1,0 +1,23 @@
+packages:
+  "framer-motion": "For fluid UI animations, dialogs, and route transitions"
+  "recharts": "For dashboard points history and analytics graphs"
+  "date-fns": "For formatting dates and relative times in Arabic"
+  "clsx": "For merging tailwind classes safely"
+  "tailwind-merge": "For resolving tailwind conflicts in UI components"
+  "react-hook-form": "For robust form state management"
+  "@hookform/resolvers": "For zod validation integration"
+  "zod": "For schema validation in forms"
+  "lucide-react": "For beautiful vector icons"
+
+images:
+  - path: "artifacts/nashmi/public/images/hero-bg.png"
+    description: "Beautiful modern Arabic geometric pattern background in deep teal and vibrant gold, abstract, elegant, premium quality, subtle lighting, warm hospitality vibe"
+    aspect_ratio: "16:9"
+  - path: "artifacts/nashmi/public/images/auth-bg.png"
+    description: "A stunning artistic illustration of an Arabic university campus, warm hospitality, modern flat design style, deep teal and gold accents, friendly and inviting"
+    aspect_ratio: "9:16"
+
+notes:
+  - Using generated API hooks from @workspace/api-client-react
+  - RTL design implemented globally via CSS
+  - Requires Cairo font from Google Fonts

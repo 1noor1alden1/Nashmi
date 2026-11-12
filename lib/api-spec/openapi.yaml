@@ -1,0 +1,1302 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Nashmi Platform API - Sharing Economy with Points System
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User management
+  - name: services
+    description: Service listings
+  - name: transactions
+    description: Points transactions and escrow
+  - name: reviews
+    description: Reviews and ratings
+  - name: notifications
+    description: Notifications
+
+paths:
+  /services/recommended/me:
+    get:
+      operationId: listRecommendedServices
+      tags: [services]
+      summary: Personalized matched services, available to logged-in providers only
+      responses:
+        '200': {description: Ranked open recommendations with explanation}
+        '401': {description: Login required}
+  /services/search/smart:
+    get:
+      operationId: searchServicesSmart
+      tags: [services]
+      summary: Hybrid E5 + lexical search with an explicit lexical fallback
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: {type: string, minLength: 2}
+        - name: category
+          in: query
+          schema: {type: string}
+        - name: urgency
+          in: query
+          schema: {type: string, enum: [low, medium, high]}
+      responses:
+        '200': {description: Method and ranked service results}
+  /services/analyze-draft:
+    post:
+      operationId: analyzeServiceDraft
+      tags: [services]
+      summary: NSSS safety + category and skills preview, requires user approval
+      responses:
+        '200': {description: Draft preview including suggested_category and suggested_skills}
+  /profile-intelligence/me:
+    get:
+      operationId: getIntelligentProfile
+      tags: [users]
+      responses:
+        '200': {description: Reviewed profile skills, availability and portfolio}
+    patch:
+      operationId: updateIntelligentProfile
+      tags: [users]
+      responses:
+        '200': {description: Profile updated}
+  /profile-intelligence/suggest-skills:
+    post:
+      operationId: suggestProfileSkills
+      tags: [users]
+      responses:
+        '200': {description: Suggested skills requiring user confirmation}
+  /profile-intelligence/me/reputation:
+    get:
+      operationId: getSkillReputation
+      tags: [users]
+      responses:
+        '200': {description: Completed jobs and requester reviews by category}
+  /saved-searches:
+    get:
+      operationId: getSavedSearches
+      tags: [services]
+      responses:
+        '200': {description: Saved searches for the authenticated user}
+    post:
+      operationId: addSavedSearch
+      tags: [services]
+      responses:
+        '201': {description: New saved search}
+  /saved-searches/{id}:
+    delete:
+      operationId: deleteSavedSearch
+      tags: [services]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        '200': {description: Search deleted}
+  /disputes:
+    post:
+      operationId: openDispute
+      tags: [services]
+      responses:
+        '201': {description: Dispute recorded and escrow settlement held}
+  /disputes/admin/pending:
+    get:
+      operationId: listPendingDisputesForAdmin
+      tags: [services]
+      responses:
+        '200': {description: Pending disputes with evidence for verified configured admins}
+  /disputes/{id}/resolve:
+    post:
+      operationId: resolveDisputeForAdmin
+      tags: [services]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        '200': {description: Escrow returned or released atomically by verified configured admin}
+  /services/{id}/matches:
+    get:
+      operationId: getSkillMatches
+      tags: [services]
+      summary: Research matching recommendations visible to requester only
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        '200':
+          description: Ranked skill matches
+
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{id}/services:
+    get:
+      operationId: getUserServices
+      tags: [users]
+      summary: Get user's services
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+
+  /services:
+    get:
+      operationId: listServices
+      tags: [services]
+      summary: List all services
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: university
+          in: query
+          schema:
+            type: string
+        - name: minPoints
+          in: query
+          schema:
+            type: integer
+        - name: maxPoints
+          in: query
+          schema:
+            type: integer
+        - name: urgency
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high]
+      responses:
+        "200":
+          description: List of services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+
+    post:
+      operationId: createService
+      tags: [services]
+      summary: Create a service request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceRequest"
+      responses:
+        "201":
+          description: Service created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /services/{id}:
+    get:
+      operationId: getService
+      tags: [services]
+      summary: Get service details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Service details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      operationId: updateService
+      tags: [services]
+      summary: Update a service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateServiceRequest"
+      responses:
+        "200":
+          description: Updated service
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+
+  /services/{id}/apply:
+    post:
+      operationId: applyToService
+      tags: [services]
+      summary: Apply to provide a service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplyRequest"
+      responses:
+        "200":
+          description: Applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /services/{id}/accept/{applicantId}:
+    post:
+      operationId: acceptApplicant
+      tags: [services]
+      summary: Accept an applicant for a service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: applicantId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Applicant accepted, escrow initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /services/{id}/complete:
+    post:
+      operationId: completeService
+      tags: [services]
+      summary: Mark service as completed
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Service completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /services/{id}/cancel:
+    post:
+      operationId: cancelService
+      tags: [services]
+      summary: Cancel a service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Service cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: Get current user's transaction history
+      responses:
+        "200":
+          description: Transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  /transactions/loan/repay:
+    post:
+      operationId: repayLoan
+      tags: [transactions]
+      summary: Repay an active points loan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: integer
+                  minimum: 1
+      responses:
+        '200':
+          description: Loan payment completed
+        '400':
+          description: Invalid repayment
+
+  /transactions/loan:
+    post:
+      operationId: requestLoan
+      tags: [transactions]
+      summary: Request a points loan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoanRequest"
+      responses:
+        "200":
+          description: Loan granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanResponse"
+        "400":
+          description: Loan denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /reviews:
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Submit a review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewRequest"
+      responses:
+        "201":
+          description: Review submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  /reviews/{serviceId}:
+    get:
+      operationId: getServiceReviews
+      tags: [reviews]
+      summary: Get reviews for a service
+      parameters:
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: Get notifications
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notification marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [users]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [users]
+      summary: Get top users leaderboard
+      responses:
+        "200":
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        success:
+          type: boolean
+      required:
+        - message
+        - success
+
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 10
+        university:
+          type: string
+        major:
+          type: string
+        bio:
+          type: string
+        skills:
+          type: string
+          description: Free text description of skills
+        inviteCode:
+          type: string
+          description: Required when closed pilot invites are enabled
+      required:
+        - name
+        - email
+        - password
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        message:
+          type: string
+      required:
+        - user
+        - message
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        university:
+          type: string
+          nullable: true
+        major:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        skillTags:
+          type: array
+          items:
+            type: string
+        points:
+          type: integer
+        loanBalance:
+          type: integer
+        level:
+          type: string
+          enum: [مستجد, فزّاع, حكيم]
+        trustScore:
+          type: number
+        totalServicesGiven:
+          type: integer
+        totalServicesReceived:
+          type: integer
+        averageRating:
+          type: number
+          nullable: true
+        isVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - points
+        - loanBalance
+        - level
+        - trustScore
+        - totalServicesGiven
+        - totalServicesReceived
+        - isVerified
+        - createdAt
+        - skillTags
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        university:
+          type: string
+          nullable: true
+        major:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        skillTags:
+          type: array
+          items:
+            type: string
+        level:
+          type: string
+          enum: [مستجد, فزّاع, حكيم]
+        trustScore:
+          type: number
+        totalServicesGiven:
+          type: integer
+        totalServicesReceived:
+          type: integer
+        averageRating:
+          type: number
+          nullable: true
+        isVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - level
+        - trustScore
+        - totalServicesGiven
+        - totalServicesReceived
+        - isVerified
+        - createdAt
+        - skillTags
+
+    CreateServiceRequest:
+      type: object
+      description: Publish a bidding request only after an NSSS approval preview was confirmed.
+      properties:
+        title: {type: string, minLength: 5, maxLength: 120}
+        description: {type: string, minLength: 20, maxLength: 5000}
+        category: {type: string, enum: [برمجة, تصميم, ترجمة, شرح دروس, تحرير, أبحاث, أخرى]}
+        requiredSkills:
+          type: array
+          maxItems: 20
+          items: {type: string}
+        urgency: {type: string, enum: [low, medium, high]}
+        offersDeadline: {type: string, format: date-time}
+        deadline: {type: string, format: date-time}
+        restrictToUniversity: {type: boolean}
+        restrictToMajor: {type: boolean}
+        originalTitle: {type: string}
+        originalDescription: {type: string}
+        nsssApprovalToken: {type: string}
+      required: [title, description, category, urgency, deadline, offersDeadline, originalTitle, originalDescription, nsssApprovalToken]
+
+    UpdateServiceRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, in_progress, completed, cancelled]
+
+    Service:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        requiredSkills:
+          type: array
+          items: {type: string}
+        urgencyBonus: {type: integer}
+        urgency:
+          type: string
+          enum: [low, medium, high]
+        status:
+          type: string
+          enum: [open, in_progress, completed, cancelled]
+        pointsPrice:
+          type: integer
+        deadline:
+          type: string
+          format: date-time
+          nullable: true
+        restrictToUniversity:
+          type: boolean
+        restrictToMajor:
+          type: boolean
+        requesterId:
+          type: integer
+        requesterName:
+          type: string
+        requesterLevel:
+          type: string
+        providerId:
+          type: integer
+          nullable: true
+        providerName:
+          type: string
+          nullable: true
+        applicantsCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - category
+        - urgency
+        - status
+        - pointsPrice
+        - restrictToUniversity
+        - restrictToMajor
+        - requesterId
+        - requesterName
+        - requesterLevel
+        - applicantsCount
+        - createdAt
+
+    ServiceDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        urgency:
+          type: string
+          enum: [low, medium, high]
+        status:
+          type: string
+          enum: [open, in_progress, completed, cancelled]
+        pointsPrice:
+          type: integer
+        deadline:
+          type: string
+          format: date-time
+          nullable: true
+        restrictToUniversity:
+          type: boolean
+        restrictToMajor:
+          type: boolean
+        requesterId:
+          type: integer
+        requesterName:
+          type: string
+          nullable: true
+        requesterLevel:
+          type: string
+          nullable: true
+        requesterUniversity:
+          type: string
+          nullable: true
+        providerId:
+          type: integer
+          nullable: true
+        providerName:
+          type: string
+          nullable: true
+        applicants:
+          type: array
+          items:
+            $ref: "#/components/schemas/Applicant"
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/Review"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - category
+        - urgency
+        - status
+        - pointsPrice
+        - restrictToUniversity
+        - restrictToMajor
+        - requesterId
+        - applicants
+        - reviews
+        - createdAt
+
+    Applicant:
+      type: object
+      properties:
+        userId:
+          type: integer
+        name:
+          type: string
+        level:
+          type: string
+        trustScore:
+          type: number
+        averageRating:
+          type: number
+          nullable: true
+        message:
+          type: string
+          nullable: true
+        appliedAt:
+          type: string
+          format: date-time
+      required:
+        - userId
+        - name
+        - level
+        - trustScore
+        - appliedAt
+
+    ApplyRequest:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    PriceCalculation:
+      type: object
+      properties:
+        basePrice:
+          type: integer
+        complexityMultiplier:
+          type: number
+        scarcityMultiplier:
+          type: number
+        urgencyMultiplier:
+          type: number
+        finalPrice:
+          type: integer
+        breakdown:
+          type: string
+      required:
+        - basePrice
+        - complexityMultiplier
+        - scarcityMultiplier
+        - urgencyMultiplier
+        - finalPrice
+        - breakdown
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [earned, spent, escrow_locked, escrow_released, loan_given, loan_repaid, bonus]
+        amount:
+          type: integer
+        balanceAfter:
+          type: integer
+        description:
+          type: string
+        serviceId:
+          type: integer
+          nullable: true
+        serviceTitle:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - amount
+        - balanceAfter
+        - description
+        - createdAt
+
+    LoanRequest:
+      type: object
+      properties:
+        amount:
+          type: integer
+          minimum: 1
+          maximum: 50
+        reason:
+          type: string
+      required:
+        - amount
+        - reason
+
+    LoanResponse:
+      type: object
+      properties:
+        granted:
+          type: boolean
+        amount:
+          type: integer
+        newBalance:
+          type: integer
+        message:
+          type: string
+        trustScoreRequired:
+          type: number
+          nullable: true
+      required:
+        - granted
+        - message
+
+    CreateReviewRequest:
+      type: object
+      properties:
+        serviceId:
+          type: integer
+        revieweeId:
+          type: integer
+        qualityRating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        commitmentRating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        respectRating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          nullable: true
+      required:
+        - serviceId
+        - revieweeId
+        - qualityRating
+        - commitmentRating
+        - respectRating
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        reviewerId:
+          type: integer
+        reviewerName:
+          type: string
+        revieweeId:
+          type: integer
+        serviceId:
+          type: integer
+        qualityRating:
+          type: integer
+        commitmentRating:
+          type: integer
+        respectRating:
+          type: integer
+        averageRating:
+          type: number
+        comment:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - reviewerId
+        - reviewerName
+        - revieweeId
+        - serviceId
+        - qualityRating
+        - commitmentRating
+        - respectRating
+        - averageRating
+        - createdAt
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [service_match, service_accepted, service_completed, review_received, loan_granted, exam_alert, points_low]
+        title:
+          type: string
+        message:
+          type: string
+        serviceId:
+          type: integer
+          nullable: true
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - title
+        - message
+        - isRead
+        - createdAt
+
+    DashboardStats:
+      type: object
+      properties:
+        points:
+          type: integer
+        loanBalance:
+          type: integer
+        level:
+          type: string
+        trustScore:
+          type: number
+        totalServicesGiven:
+          type: integer
+        totalServicesReceived:
+          type: integer
+        averageRating:
+          type: number
+          nullable: true
+        activeServices:
+          type: integer
+        topSkills:
+          type: array
+          items:
+            type: string
+        pointsHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/PointsHistoryEntry"
+        recentTransactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+        nextLevelProgress:
+          type: number
+          description: Progress to next level (0-100)
+      required:
+        - points
+        - loanBalance
+        - level
+        - trustScore
+        - totalServicesGiven
+        - totalServicesReceived
+        - activeServices
+        - topSkills
+        - pointsHistory
+        - recentTransactions
+        - nextLevelProgress
+
+    PointsHistoryEntry:
+      type: object
+      properties:
+        date:
+          type: string
+        points:
+          type: integer
+      required:
+        - date
+        - points
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        level:
+          type: string
+        trustScore:
+          type: number
+        totalServicesGiven:
+          type: integer
+        averageRating:
+          type: number
+          nullable: true
+        university:
+          type: string
+          nullable: true
+      required:
+        - rank
+        - userId
+        - name
+        - level
+        - trustScore
+        - totalServicesGiven

@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: 'Cairo', sans-serif;
+  
+  /* Nashmi Color Palette: Warm Arabic Cultural, Bold Gold & Deep Teal */
+  --color-background: hsl(40 33% 98%);     /* Warm off-white */
+  --color-foreground: hsl(191 80% 15%);    /* Very dark teal */
+  
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(191 80% 15%);
+  
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(191 80% 15%);
+  
+  --color-primary: hsl(191 72% 21%);       /* Deep Teal #0F4C5C */
+  --color-primary-foreground: hsl(40 33% 98%);
+  
+  --color-secondary: hsl(44 89% 66%);      /* Bold Gold #F5CB5C */
+  --color-secondary-foreground: hsl(191 72% 21%);
+  
+  --color-muted: hsl(191 20% 92%);
+  --color-muted-foreground: hsl(191 20% 45%);
+  
+  --color-accent: hsl(44 89% 66%);
+  --color-accent-foreground: hsl(191 72% 21%);
+  
+  --color-destructive: hsl(0 72% 59%);     /* Crimson Red */
+  --color-destructive-foreground: hsl(0 0% 100%);
+  
+  --color-border: hsl(191 20% 90%);
+  --color-input: hsl(191 20% 90%);
+  --color-ring: hsl(44 89% 66%);
+  
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* Custom Scrollbar for premium feel */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/20 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/40;
+  }
+}
+
+@layer utilities {
+  .glass-effect {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-lg shadow-black/5;
+  }
+  
+  .glass-dark {
+    @apply bg-primary/90 backdrop-blur-md border border-white/10 shadow-xl shadow-black/20;
+  }
+
+  /* Text gradients */
+  .text-gradient-gold {
+    @apply bg-gradient-to-l from-yellow-500 to-yellow-600 bg-clip-text text-transparent;
+  }
+  .text-gradient-teal {
+    @apply bg-gradient-to-l from-primary to-teal-700 bg-clip-text text-transparent;
+  }
+}

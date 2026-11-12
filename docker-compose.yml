@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nashmi_dev
+      POSTGRES_PASSWORD: dev_only_change_before_sharing
+      POSTGRES_DB: nashmi_dev
+    ports:
+      - '127.0.0.1:5439:5432'
+    volumes:
+      - nashmi_dev_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nashmi_dev -d nashmi_dev']
+      interval: 3s
+      timeout: 3s
+      retries: 15
+volumes:
+  nashmi_dev_pgdata:

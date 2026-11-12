@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "نشمي - منصة الاقتصاد التشاركي"
+version = "1.0.0"
+id = "artifacts/nashmi"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 19214
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/nashmi run dev"
+
+[services.env]
+PORT = "19214"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/nashmi", "run", "build"]
+publicDir = "artifacts/nashmi/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
